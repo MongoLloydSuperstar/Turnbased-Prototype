@@ -19,9 +19,11 @@ public class GridTesting : MonoBehaviour
     {
         gridTileList.Clear();
 
-        ScriptableObject[,,] tiles = GridManager.gridManager.GridTiles;
+        ScriptableObject[,,] tiles = GridNamespace.Grid.grid.GridTiles;
         foreach (GridTile gridTile in tiles) {
             gridTileList.Add(gridTile);
         }
+
+
     }
 }
