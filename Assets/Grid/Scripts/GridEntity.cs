@@ -6,25 +6,28 @@ namespace GridNamespace
 {
     public class GridEntity : MonoBehaviour
     {
-        public Vector3 gridPosition = new Vector3();
-        public Vector3 targetOnGrid = new Vector3();
+        public Vector3 moveTo = new Vector3();
+        public Vector3Int gridPosition = new Vector3Int();
+        public Vector3 currentPosition = new Vector3();
+        public Vector3 grid = new Vector3();
         public bool lockToGrid = false;
-        
 
-        
+        private GameObject mesh;
+        private GameObject target;
 
-        private void FindGridPosition()
+        public GameObject Mesh { get => mesh; set => mesh = value; }
+        public GameObject Target { get => target; set => target = value; }
+
+        private void Start()
         {
-            gridPosition = new Vector3(
-                Mathf.Floor(transform.position.x * Grid.grid.cellSize.x),
-                Mathf.Floor(transform.position.y * Grid.grid.cellSize.y),
-                Mathf.Floor(transform.position.z * Grid.grid.cellSize.z)
-                );
-        }
-
-        private void SetGridPosition()
-        {
-            transform.position = gridPosition;
+            foreach (Transform t in transform) {
+                if (t.CompareTag("Target")) {
+                    target = t.gameObject;
+                }
+                else if (t.CompareTag("Mesh")) {
+                    mesh = t.gameObject;
+                }
+            }
         }
 
         private void Update()
@@ -32,23 +35,55 @@ namespace GridNamespace
             UpdatePosition();
 
             if (Input.GetKeyDown(KeyCode.Space)) {
-                Debug.Log("World To Cell: " + GridNamespace.Grid.grid.WorldToCell(transform.position));
-                Debug.Log("World To Local: " + GridNamespace.Grid.grid.WorldToLocal(transform.position));
+                Debug.Log("World To Cell: " + Grid3D.grid.WorldToCell(transform.position));
+                Debug.Log("World To Local: " + Grid3D.grid.WorldToLocal(transform.position));
+                Debug.Log("Cell To World: " + Grid3D.grid.CellToWorld(new Vector3Int(1, 0, 1)));
+                Debug.Log("Bounds Local: " + Grid3D.grid.GetBoundsLocal(new Vector3Int(2, 0, 1)));
             }
         }
 
+
         private void UpdatePosition()
         {
+            transform.position = Grid3D.grid.transform.position;
             FindGridPosition();
             if (lockToGrid) {
-                SetGridPosition();
+                LockToGrid();
             }
+            else {
+                mesh.transform.position = target.transform.position;
+            }
+
         }
+
+        private void FindGridPosition()
+        {
+            gridPosition = ClampPosition(Grid3D.grid.WorldToCell(target.transform.position));
+        }
+
+        private Vector3Int ClampPosition(Vector3Int gp)
+        {
+            Vector3 border = Grid3D.grid.gridSize - Vector3.one;
+
+            return new Vector3Int
+                (
+                (int)Mathf.Clamp(gridPosition.x, 0, border.x),
+                (int)Mathf.Clamp(gridPosition.y, 0, border.y),
+                (int)Mathf.Clamp(gridPosition.z, 0, border.z)
+                );
+        }
+
+        private void LockToGrid()
+        {
+            mesh.transform.position = gridPosition + Grid3D.grid.GetCellOffset();
+        }        
 
         private void MoveToPosition()
         {
 
         }
+
+        
     }
 }
 
