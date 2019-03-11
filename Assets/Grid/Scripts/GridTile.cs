@@ -25,7 +25,14 @@ namespace GridNamespace
             name = "Tile - " + positionString;
         }
 
-        
+        public void AddToTile(GridEntity gridEntity)
+        {
+            gridEntities.Add(gridEntity);
+        }
 
+        public void RemoveFromTile(GridEntity gridEntity)
+        {
+            gridEntities.Remove(gridEntity);
+        }
     }
 }

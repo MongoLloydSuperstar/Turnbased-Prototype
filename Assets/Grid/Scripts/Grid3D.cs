@@ -84,6 +84,7 @@ namespace GridNamespace
             return (Vector3)gridSize / 2;
         }
 
+        
         #endregion
 
         #region Internal Methods
@@ -109,10 +110,16 @@ namespace GridNamespace
             floorQuad.transform.localScale = new Vector3(gridSize.x, gridSize.z, 0);
         }
 
+        private void Update()
+        {
+            DebugGetTilesWithEntity();
+        }
+
+        
 
         private void InitializeTileList()
         {
-            //Sets a default Grid if non exists
+            //Sets a default (10, 10, 10) Grid if non exists
             if (gridSize == null || gridSize == Vector3.zero) {
                 gridSize = new Vector3Int(10, 10, 10);
             }
@@ -187,6 +194,26 @@ namespace GridNamespace
         private void DrawCenter()
         {
             Gizmos.DrawSphere(GetGridCenter(), 0.1f);
+        }
+
+        #endregion
+
+        #region Debug
+
+        private void DebugGetTilesWithEntity()
+        {
+            if (Input.GetKeyDown(KeyCode.G)) {
+                foreach (ScriptableObject scriptableObject in GridTiles) {
+                    GridTile gridTile = scriptableObject as GridTile;
+
+                    if (gridTile.GridEntities.Count != 0) {
+                        Debug.Log(gridTile.GridPosition);
+                        foreach (GridEntity gridEntity in gridTile.GridEntities) {
+                            Debug.Log(gridEntity);
+                        }
+                    }
+                }
+            }
         }
 
         #endregion

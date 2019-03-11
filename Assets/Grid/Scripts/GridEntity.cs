@@ -8,7 +8,7 @@ namespace GridNamespace
     {
         public Vector3 moveTo = new Vector3();
         public Vector3Int gridPosition = new Vector3Int();
-        public Vector3 currentPosition = new Vector3();
+        public Vector3Int previousGridPosition = new Vector3Int();
         public Vector3 grid = new Vector3();
         public bool lockToGrid = false;
 
@@ -32,16 +32,15 @@ namespace GridNamespace
 
         private void Update()
         {
-            UpdatePosition();
+            previousGridPosition = gridPosition;
 
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                Debug.Log("World To Cell: " + Grid3D.grid.WorldToCell(transform.position));
-                Debug.Log("World To Local: " + Grid3D.grid.WorldToLocal(transform.position));
-                Debug.Log("Cell To World: " + Grid3D.grid.CellToWorld(new Vector3Int(1, 0, 1)));
-                Debug.Log("Bounds Local: " + Grid3D.grid.GetBoundsLocal(new Vector3Int(2, 0, 1)));
-            }
+            UpdatePosition();
+            TestChangedPosition();
+
+            DebugSpaceKey();
         }
 
+        
 
         private void UpdatePosition()
         {
@@ -65,25 +64,54 @@ namespace GridNamespace
         {
             Vector3 border = Grid3D.grid.gridSize - Vector3.one;
 
-            return new Vector3Int
+             Vector3Int clampedPosition = new Vector3Int
                 (
-                (int)Mathf.Clamp(gridPosition.x, 0, border.x),
-                (int)Mathf.Clamp(gridPosition.y, 0, border.y),
-                (int)Mathf.Clamp(gridPosition.z, 0, border.z)
+                (int)Mathf.Clamp(gp.x, 0, border.x),
+                (int)Mathf.Clamp(gp.y, 0, border.y),
+                (int)Mathf.Clamp(gp.z, 0, border.z)
                 );
+
+            return clampedPosition;
         }
 
         private void LockToGrid()
         {
             mesh.transform.position = gridPosition + Grid3D.grid.GetCellOffset();
-        }        
+        }
+
+        public void TestChangedPosition()
+        {
+            if (gridPosition != previousGridPosition) {
+                GridTile previousTile = Grid3D.grid.GridTiles[previousGridPosition.x, previousGridPosition.y, previousGridPosition.z] as GridTile;
+                GridTile newTile = Grid3D.grid.GridTiles[gridPosition.x, gridPosition.y, gridPosition.z] as GridTile;
+
+                previousTile.RemoveFromTile(this);
+                newTile.AddToTile(this);
+
+                transform.hasChanged = false;
+            }            
+        }
 
         private void MoveToPosition()
         {
 
         }
-
         
+
+        #region Debug
+
+        private void DebugSpaceKey()
+        {
+            if (Input.GetKeyDown(KeyCode.Space)) {
+                Debug.Log("World To Cell: " + Grid3D.grid.WorldToCell(transform.position));
+                Debug.Log("World To Local: " + Grid3D.grid.WorldToLocal(transform.position));
+                Debug.Log("Cell To World: " + Grid3D.grid.CellToWorld(new Vector3Int(1, 0, 1)));
+                Debug.Log("Bounds Local: " + Grid3D.grid.GetBoundsLocal(new Vector3Int(2, 0, 1)));
+            }
+        }
+
+        #endregion
+
     }
 }
 
