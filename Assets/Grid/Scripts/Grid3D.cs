@@ -4,21 +4,23 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace GridNamespace
+namespace GridSystem
 {
     public class Grid3D : MonoBehaviour
     {
         #region Fields
-        public static Grid3D grid = null;
+        public static Grid3D instance = null;
 
         public Vector3Int gridSize;
         public Vector3 cellSize = Vector3.one;
 
+        private float floorHeight = 0.1f;
+        private GameObject floorCube;
 
-        private GameObject floorQuad;
-
-
-        public ScriptableObject[,,] GridTiles { get; private set; }
+        public ScriptableObject[,,] GridCells { get; private set; }
+        public GameObject FloorQuad { get => FloorQuad; private set => FloorQuad = value; }
+        public GameObject FloorCube { get => floorCube; set => floorCube = value; }
+        public float FloorHeight { get => floorHeight; private set => floorHeight = value; }
 
 
         #endregion
@@ -62,9 +64,9 @@ namespace GridNamespace
         public Vector3Int WorldToCell(Vector3 worldPosition)
         {
             return new Vector3Int(
-                Mathf.FloorToInt(worldPosition.x * cellSize.x),
-                Mathf.FloorToInt(worldPosition.y * cellSize.y),
-                Mathf.FloorToInt(worldPosition.z * cellSize.z)
+                (int)(Mathf.Floor(worldPosition.x / cellSize.x) * cellSize.x),
+                (int)(Mathf.Floor(worldPosition.y / cellSize.y) * cellSize.y),
+                (int)(Mathf.Floor(worldPosition.z / cellSize.z) * cellSize.z)
                 );
         }
 
@@ -84,17 +86,37 @@ namespace GridNamespace
             return (Vector3)gridSize / 2;
         }
 
-        
+        public GameObject CreateQuad(Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            GameObject fQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            fQuad.transform.position = pos;
+            fQuad.transform.rotation = rot;
+            fQuad.transform.localScale = scale;
+
+            return fQuad;
+        }
+
+        public GameObject CreateCube(Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            GameObject fCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fCube.transform.position = pos;
+            fCube.transform.rotation = rot;
+            fCube.transform.localScale = scale;
+
+            return fCube;
+        }
+
+
         #endregion
 
         #region Internal Methods
 
         private void Awake()
         {
-            if (grid == null) {
-                grid = this;
+            if (instance == null) {
+                instance = this;
             }
-            else if (grid != this) {
+            else if (instance != this) {
                 Debug.LogWarning("Tried to instantiate additional Grid3D");
                 Destroy(gameObject);
             }
@@ -104,18 +126,25 @@ namespace GridNamespace
 
         private void Start()
         {
-            floorQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            floorQuad.transform.position = Vector3.Scale(GetGridCenter(), new Vector3(1, 0, 1));
-            floorQuad.transform.rotation = Quaternion.Euler(90 * Vector3.right);
-            floorQuad.transform.localScale = new Vector3(gridSize.x, gridSize.z, 0);
+            floorCube = CreateCube(
+                Vector3.Scale(GetGridCenter(), new Vector3(1, 0, 1)) + (Vector3.up * (floorHeight / 2)),
+                Quaternion.identity,
+                new Vector3(gridSize.x, floorHeight, gridSize.z)
+                );
+
+            //FloorQuad = CreateQuad(
+            //    Vector3.Scale(GetGridCenter(), new Vector3(1, Mathf.Epsilon, 1)), // Epsilon adds the smallest float value to put it on top. Float rounding issue if y is exactly 0
+            //    Quaternion.Euler(90f * Vector3.right), 
+            //    new Vector3(gridSize.x, gridSize.z, 1)
+            //    );
         }
 
         private void Update()
         {
-            DebugGetTilesWithEntity();
+            DGetCellsHoldingEntity();
         }
 
-        
+
 
         private void InitializeTileList()
         {
@@ -124,16 +153,16 @@ namespace GridNamespace
                 gridSize = new Vector3Int(10, 10, 10);
             }
 
-            GridTiles = new GridTile[gridSize.x, gridSize.y, gridSize.z];
+            GridCells = new GridCell[gridSize.x, gridSize.y, gridSize.z];
 
             for (int x = 0; x < gridSize.x; x++) {
                 for (int y = 0; y < gridSize.y; y++) {
                     for (int z = 0; z < gridSize.z; z++) {
-                        GridTile tile = ScriptableObject.CreateInstance(typeof(GridTile)) as GridTile;
-                        tile.Initialize(new Vector3(x, y, z));
+                        GridCell cell = ScriptableObject.CreateInstance(typeof(GridCell)) as GridCell;
+                        cell.Initialize(new Vector3(x, y, z));
 
 
-                        GridTiles[x, y, z] = tile;
+                        GridCells[x, y, z] = cell;
                     }
                 }
             }
@@ -149,7 +178,7 @@ namespace GridNamespace
             Color gridColor = Color.red;
             gridColor.a = 0.5f;
             Gizmos.color = gridColor;
-            
+
             DrawGrid(gridSize.x, gridSize.z, cellSize.x, cellSize.z);
             DrawCorners();
             DrawCenter();
@@ -179,7 +208,7 @@ namespace GridNamespace
 
         private void DrawCorners()
         {
-            Vector3[] corners = 
+            Vector3[] corners =
                 { Vector3.zero, gridSize,
                 new Vector3(0, 0, gridSize.z), new Vector3(0, gridSize.y, 0),new Vector3(gridSize.x, 0, 0),
                 new Vector3(0, gridSize.y, gridSize.z), new Vector3(gridSize.x, 0, gridSize.z), new Vector3(gridSize.x, gridSize.y, 0)
@@ -200,15 +229,15 @@ namespace GridNamespace
 
         #region Debug
 
-        private void DebugGetTilesWithEntity()
+        private void DGetCellsHoldingEntity()
         {
             if (Input.GetKeyDown(KeyCode.G)) {
-                foreach (ScriptableObject scriptableObject in GridTiles) {
-                    GridTile gridTile = scriptableObject as GridTile;
+                foreach (ScriptableObject scriptableObject in GridCells) {
+                    GridCell gridCell = scriptableObject as GridCell;
 
-                    if (gridTile.GridEntities.Count != 0) {
-                        Debug.Log(gridTile.GridPosition);
-                        foreach (GridEntity gridEntity in gridTile.GridEntities) {
+                    if (gridCell.GridEntities.Count != 0) {
+                        Debug.Log(gridCell.GridPosition);
+                        foreach (GridEntity gridEntity in gridCell.GridEntities) {
                             Debug.Log(gridEntity);
                         }
                     }

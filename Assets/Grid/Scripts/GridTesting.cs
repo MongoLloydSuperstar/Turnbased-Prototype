@@ -2,11 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using GridNamespace;
+using GridSystem;
 
 public class GridTesting : MonoBehaviour
 {
-    public List<GridTile> gridTileList = new List<GridTile>();
+    public List<GridCell> gridCellList = new List<GridCell>();
     
 
     // Start is called before the first frame update
@@ -18,7 +18,7 @@ public class GridTesting : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //AddTiles();
+        //AddCells();
         if (Input.GetKeyDown(KeyCode.Backspace)) {
             Grid grid = GetComponent<Grid>();
             Debug.Log("Native Local Bounds: " + grid.GetBoundsLocal(new Vector3Int(2, 0, 1)));
@@ -26,13 +26,13 @@ public class GridTesting : MonoBehaviour
 
     }
 
-    private void AddTiles()
+    private void AddCells()
     {
-        gridTileList.Clear();
+        gridCellList.Clear();
 
-        ScriptableObject[,,] tiles = GridNamespace.Grid3D.grid.GridTiles;
-        foreach (GridTile gridTile in tiles) {
-            gridTileList.Add(gridTile);
+        ScriptableObject[,,] cells = GridSystem.Grid3D.instance.GridCells;
+        foreach (GridCell gridCell in cells) {
+            gridCellList.Add(gridCell);
         }
     }
 }
