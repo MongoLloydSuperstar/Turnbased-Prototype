@@ -18,6 +18,7 @@ namespace GridSystem
         public GameObject MeshObject { get => meshObject; set => meshObject = value; }
         public GameObject Target { get => target; set => target = value; }
 
+
         private void Start()
         {
             foreach (Transform t in transform) {
@@ -32,20 +33,19 @@ namespace GridSystem
 
         private void Update()
         {
-            previousGridPosition = gridPosition;
-
             UpdatePosition();
             TestChangedPosition();
 
             DebugSpaceKey();
+
+            previousGridPosition = gridPosition;
         }
+
 
         private void UpdatePosition()
         {
             transform.position = Grid3D.instance.transform.position;
             FindGridPosition();
-
-
 
             if (lockToGrid) {
                 LockToGrid();
@@ -70,7 +70,7 @@ namespace GridSystem
 
         private void FindGridPosition()
         {
-            gridPosition = ClampPosition(Grid3D.instance.WorldToCell(target.transform.position));
+            gridPosition = ClampPosition(Grid3D.WorldToCell(target.transform.position));
         }
 
         private Vector3Int ClampPosition(Vector3Int gp)
@@ -95,8 +95,8 @@ namespace GridSystem
         public void TestChangedPosition()
         {
             if (gridPosition != previousGridPosition) {
-                GridCell previousCell = Grid3D.instance.GridCells[previousGridPosition.x, previousGridPosition.y, previousGridPosition.z] as GridCell;
-                GridCell newCell = Grid3D.instance.GridCells[gridPosition.x, gridPosition.y, gridPosition.z] as GridCell;
+                GridCell previousCell = Grid3D.GridCells[previousGridPosition.x, previousGridPosition.y, previousGridPosition.z] as GridCell;
+                GridCell newCell = Grid3D.GridCells[gridPosition.x, gridPosition.y, gridPosition.z] as GridCell;
 
                 previousCell.RemoveFromCell(this);
                 newCell.AddToCell(this);
@@ -116,10 +116,10 @@ namespace GridSystem
         private void DebugSpaceKey()
         {
             if (Input.GetKeyDown(KeyCode.Space)) {
-                Debug.Log("World To Cell: " + Grid3D.instance.WorldToCell(transform.position));
-                Debug.Log("World To Local: " + Grid3D.instance.WorldToLocal(transform.position));
-                Debug.Log("Cell To World: " + Grid3D.instance.CellToWorld(new Vector3Int(1, 0, 1)));
-                Debug.Log("Bounds Local: " + Grid3D.instance.GetBoundsLocal(new Vector3Int(2, 0, 1)));
+                Debug.Log("World To Cell: " + Grid3D.WorldToCell(transform.position));
+                Debug.Log("World To Local: " + Grid3D.WorldToLocal(transform.position));
+                Debug.Log("Cell To World: " + Grid3D.CellToWorld(new Vector3Int(1, 0, 1)));
+                Debug.Log("Bounds Local: " + Grid3D.GetBoundsLocal(new Vector3Int(2, 0, 1)));
             }
         }
 

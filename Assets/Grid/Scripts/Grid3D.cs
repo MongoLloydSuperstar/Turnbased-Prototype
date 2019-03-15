@@ -17,76 +17,75 @@ namespace GridSystem
         private float floorHeight = 0.1f;
         private GameObject floorCube;
 
-        public ScriptableObject[,,] GridCells { get; private set; }
+        public static ScriptableObject[,,] GridCells { get; private set; }
         public GameObject FloorQuad { get => FloorQuad; private set => FloorQuad = value; }
         public GameObject FloorCube { get => floorCube; set => floorCube = value; }
         public float FloorHeight { get => floorHeight; private set => floorHeight = value; }
-
-
+        
         #endregion
 
         #region Public methods and accessors
         // Get the local position of a cell
-        public Vector3 CellToLocal(Vector3Int cellPosition)
+        public static Vector3 CellToLocal(Vector3Int cellPosition)
         {
             return cellPosition;
         }
 
         // Get the world position of a cell
-        public Vector3 CellToWorld(Vector3Int cellPosition)
+        public static Vector3 CellToWorld(Vector3Int cellPosition)
         {
-            return cellPosition + transform.position;
+            return cellPosition + instance.transform.position;
         }
 
         // Get the bounds of a cell
-        public Bounds GetBoundsLocal(Vector3Int cellPosition)
+        public static Bounds GetBoundsLocal(Vector3Int cellPosition)
         {
-            return new Bounds(cellPosition, cellSize);
+            return new Bounds(cellPosition, instance.cellSize);
         }
 
         // Get a cell from local position
-        public Vector3Int LocalToCell(Vector3 localPosition)
+        public static Vector3Int LocalToCell(Vector3 localPosition)
         {
             return new Vector3Int(
-                Mathf.FloorToInt(localPosition.x * cellSize.x),
-                Mathf.FloorToInt(localPosition.y * cellSize.y),
-                Mathf.FloorToInt(localPosition.z * cellSize.z)
+                Mathf.FloorToInt(localPosition.x * instance.cellSize.x),
+                Mathf.FloorToInt(localPosition.y * instance.cellSize.y),
+                Mathf.FloorToInt(localPosition.z * instance.cellSize.z)
                 );
         }
 
         // Get world position from local position
-        public Vector3 LocalToWorld(Vector3 localPosition)
+        public static Vector3 LocalToWorld(Vector3 localPosition)
         {
-            return localPosition + transform.position;
+            return localPosition + instance.transform.position;
         }
 
         // Get a cell fro world position
-        public Vector3Int WorldToCell(Vector3 worldPosition)
+        public static Vector3Int WorldToCell(Vector3 worldPosition)
         {
             return new Vector3Int(
-                (int)(Mathf.Floor(worldPosition.x / cellSize.x) * cellSize.x),
-                (int)(Mathf.Floor(worldPosition.y / cellSize.y) * cellSize.y),
-                (int)(Mathf.Floor(worldPosition.z / cellSize.z) * cellSize.z)
+                (int)(Mathf.Floor(worldPosition.x / instance.cellSize.x) * instance.cellSize.x),
+                (int)(Mathf.Floor(worldPosition.y / instance.cellSize.y) * instance.cellSize.y),
+                (int)(Mathf.Floor(worldPosition.z / instance.cellSize.z) * instance.cellSize.z)
                 );
         }
 
         // Get local position from world position
-        public Vector3 WorldToLocal(Vector3 worldPosition)
+        public static Vector3 WorldToLocal(Vector3 worldPosition)
         {
-            return worldPosition - transform.position;
+            return worldPosition - instance.transform.position;
         }
 
-        public Vector3 GetCellOffset()
+        public static Vector3 GetCellOffset(Vector3 cellSize)
         {
             return cellSize / 2;
         }
 
-        public Vector3 GetGridCenter()
+        public static Vector3 GetGridCenter(Vector3Int gridSize)
         {
             return (Vector3)gridSize / 2;
         }
 
-        public GameObject CreateQuad(Vector3 pos, Quaternion rot, Vector3 scale)
+        public static GameObject CreateQuad(Vector3 pos, Quaternion rot, Vector3 scale)
         {
             GameObject fQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             fQuad.transform.position = pos;
@@ -96,7 +95,7 @@ namespace GridSystem
             return fQuad;
         }
 
-        public GameObject CreateCube(Vector3 pos, Quaternion rot, Vector3 scale)
+        public static GameObject CreateCube(Vector3 pos, Quaternion rot, Vector3 scale)
         {
             GameObject fCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             fCube.transform.position = pos;
@@ -127,7 +126,7 @@ namespace GridSystem
         private void Start()
         {
             floorCube = CreateCube(
-                Vector3.Scale(GetGridCenter(), new Vector3(1, 0, 1)) + (Vector3.up * (floorHeight / 2)),
+                Vector3.Scale(GetGridCenter(gridSize), new Vector3(1, 0, 1)) + (Vector3.up * (floorHeight / 2)),
                 Quaternion.identity,
                 new Vector3(gridSize.x, floorHeight, gridSize.z)
                 );
@@ -222,7 +221,7 @@ namespace GridSystem
 
         private void DrawCenter()
         {
-            Gizmos.DrawSphere(GetGridCenter(), 0.1f);
+            Gizmos.DrawSphere(GetGridCenter(gridSize), 0.1f);
         }
 
         #endregion

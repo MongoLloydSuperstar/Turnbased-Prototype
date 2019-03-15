@@ -30,7 +30,7 @@ public class GridTesting : MonoBehaviour
     {
         gridCellList.Clear();
 
-        ScriptableObject[,,] cells = GridSystem.Grid3D.instance.GridCells;
+        ScriptableObject[,,] cells = Grid3D.GridCells;
         foreach (GridCell gridCell in cells) {
             gridCellList.Add(gridCell);
         }

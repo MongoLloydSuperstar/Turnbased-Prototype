@@ -18,7 +18,7 @@ namespace GridSystem
         #endregion
 
 
-        public void Initialize(Vector3 gp) {            
+        public void Initialize(Vector3 gp) {
             gridPosition = gp;
 
             string positionString = gp.x + ", " + gp.y + ", " + gp.z;
